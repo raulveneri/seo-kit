@@ -1,0 +1,11 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+*.log
+node_modules/
+__pycache__/
+*.pyc
+seo-kit.local.json
+.state/
+.agents/local/

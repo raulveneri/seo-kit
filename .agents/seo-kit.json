@@ -1,0 +1,9 @@
+{
+  "repository": "raulveneri/seo-kit",
+  "defaultBranch": "main",
+  "updateChannel": "owner-approved-releases",
+  "releaseApprover": {
+    "login": "raulveneri",
+    "id": 287455018
+  }
+}

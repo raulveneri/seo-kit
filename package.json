@@ -1,0 +1,59 @@
+{
+  "name": "seo-kit",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node .agents/scripts/build-adapters.mjs",
+    "setup": "node .agents/scripts/setup.mjs install",
+    "setup:dry-run": "node .agents/scripts/setup.mjs install --dry-run",
+    "setup:status": "node .agents/scripts/setup.mjs status",
+    "setup:rollback": "node .agents/scripts/setup.mjs rollback",
+    "uninstall": "node .agents/scripts/setup.mjs uninstall",
+    "uninstall:dry-run": "node .agents/scripts/setup.mjs uninstall --dry-run",
+    "setup:remove": "node .agents/scripts/setup.mjs remove",
+    "doctor": "node .agents/scripts/doctor.mjs",
+    "sync": "node .agents/scripts/remote-sync.mjs once",
+    "sync:watch": "node .agents/scripts/remote-sync.mjs watch",
+    "audit": "node .agents/scripts/python-runtime.mjs .agents/scripts/audit.py",
+    "audit:live": "node .agents/scripts/python-runtime.mjs .agents/scripts/live_audit.py",
+    "audit:query": "node .agents/scripts/python-runtime.mjs .agents/scripts/crawl_query.py",
+    "audit:schedule": "node .agents/scripts/python-runtime.mjs .agents/scripts/audit_schedule.py",
+    "test": "node --test .agents/tests/*.test.mjs && node .agents/scripts/python-runtime.mjs -m unittest discover -s .agents/tests -p 'test_*.py'",
+    "check:private-data": "node .agents/scripts/check-private-data.mjs",
+    "validate": "npm run check:private-data && node .agents/scripts/build-adapters.mjs && node .agents/scripts/doctor.mjs --repository-only && npm test",
+    "test:browser": "node .agents/scripts/python-runtime.mjs .agents/scripts/test-browser.py",
+    "setup:audit": "python3 .agents/scripts/setup-audit.py"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "amphtml-validator": "^1.0.38",
+    "axe-core": "^4.14.0"
+  },
+  "files": [
+    ".gitattributes",
+    ".github/workflows/*.yml",
+    "AGENTS.md",
+    "README.md",
+    "docs/*.md",
+    ".agents/seo-kit.json",
+    ".agents/requirements-audit.txt",
+    ".agents/requirements-audit.lock",
+    ".agents/context/*.md",
+    ".agents/agents/*.md",
+    ".agents/skills/*/*.md",
+    ".agents/runtime/*.md",
+    ".agents/adapters/claude/agents/*.md",
+    ".agents/adapters/codex/agents/*.toml",
+    ".agents/adapters/opencode/agent/*.md",
+    ".agents/scripts/*.mjs",
+    ".agents/scripts/*.py",
+    ".agents/tests/*.mjs",
+    ".agents/tests/*.py",
+    ".agents/install/systemd/*.in",
+    ".agents/install/launchd/*.in",
+    ".agents/install/windows/*.in"
+  ]
+}
