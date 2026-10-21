@@ -3,5 +3,8 @@
 Description=Update SEO Kit
 [Service]
 Type=oneshot
-ExecStart={{NODE}} {{LAUNCHER}} sync
+StandardInput=null
+StandardOutput=journal
+StandardError=journal
+ExecStart={{NODE}} {{LAUNCHER}} sync --scheduled
 Environment={{PATH}}

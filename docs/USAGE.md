@@ -101,7 +101,7 @@ npm run setup:status
 
 Setup installs an owner-approved release into the [managed user data directory](INSTALLATION.md#data-and-discovery-paths), outside the active project. On Windows this is `%USERPROFILE%\.local\share\ai-kits\seo-kit`, independent of LocalAppData virtualization in Codex Desktop. It copies individual kit resources into native assistant discovery paths and merges a marked routing block into global instructions. It preserves other resources and refuses conflicting or locally edited files. A setup dry-run performs no writes or Git/network operations.
 
-Automatic updates run hourly and at login/startup through Windows Task Scheduler, macOS launchd, a Linux user systemd timer or cron. Offline failures retry on the next scheduled run. Updates stage and validate a new commit before activating it, retain the previous release and recover interrupted integration writes on the next invocation. Local changes, origin changes or divergent history stop activation. Only published upstream repository changes are downloaded. No knowledge research jobs run automatically.
+Automatic updates run in the background at login/startup and daily at 00:00 in the computer's local time zone through Windows Task Scheduler, macOS launchd, a Linux user systemd timer or cron. Offline failures retry on the next scheduled run. Updates stage and validate a new commit before activating it, retain the previous release and recover interrupted integration writes on the next invocation. Local changes, origin changes or divergent history stop activation. Only published upstream repository changes are downloaded. No knowledge research jobs run automatically.
 
 ```bash
 npm run sync

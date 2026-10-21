@@ -27,6 +27,7 @@ export function fail(message) {
 
 export function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
+    windowsHide: true,
     cwd: options.cwd ?? ROOT,
     encoding: "utf8",
     input: options.input,

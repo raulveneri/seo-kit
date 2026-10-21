@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import { platformPaths } from "../scripts/platform-paths.mjs";
 import { installation, installGlobal, syncGlobal, rollbackGlobal, removeGlobal, readInstallation, checkInstallation, withInstallationLock } from "../scripts/global-install.mjs";
 import { integrationFiles, planIntegrations, getBlock, START, END } from "../scripts/integrations.mjs";
@@ -369,7 +370,7 @@ test("lock rejects concurrent updates and journal recovers interrupted writes", 
 
 test("scheduler adapters cover Windows, macOS, Linux and cron without altering host tasks", (t) => {
   const directory = temporary(t);
-  for (const platform of ["win32", "darwin", "linux", "freebsd"]) {
+  for (const platform of ["win32", "darwin", "linux", "freebsd", "openbsd", "netbsd", "sunos", "aix", "linux-cron"]) {
     // Use host-native temporary paths. Platform selection tests the scheduler,
     // while the path table above separately tests native Windows path rules.
     const base = path.join(directory, platform);
@@ -380,15 +381,31 @@ test("scheduler adapters cover Windows, macOS, Linux and cron without altering h
       return { status: 0, stdout: command === "crontab" && args[0] === "-l" ? "# user task\n5 * * * * echo hello\n" : "", stderr: "" };
     };
     const paths = { config: path.join(base, "config") };
-    const scheduler = configureUpdates({ base, paths, home: base, platform, env: { PATH: "/bin:/path with spaces" }, execute: executeMock });
-    assert.equal(scheduler, { win32: "windows-task", darwin: "launchd", linux: "systemd", freebsd: "cron" }[platform]);
+    const selection = { platform: platform === "linux-cron" ? "linux" : platform, ...(platform === "linux-cron" ? { scheduler: "cron" } : {}) };
+    const scheduler = configureUpdates({ base, paths, home: base, ...selection, env: { PATH: "/bin:/path with spaces" }, execute: executeMock });
+    assert.equal(scheduler, { win32: "windows-task", darwin: "launchd", linux: "systemd" }[platform] ?? "cron");
     if (platform === "win32") {
       const file = path.join(base, "state/scheduled-task.ps1");
       const script = readFileSync(file, "utf8");
       assert.ok(script.includes("-AtLogOn"));
-      assert.ok(script.includes("-RepetitionInterval"));
+      assert.ok(script.includes("-Daily -At '00:00'"));
+      assert.ok(!script.includes("-RepetitionInterval"));
+      assert.ok(script.includes("System32\\wscript.exe"));
+      assert.ok(script.includes("//B //NoLogo //E:JScript"));
       assert.ok(script.includes("-RunLevel Limited"));
       assert.equal(script.charCodeAt(0), 0xFEFF);
+      const wrapper = readFileSync(path.join(base, "state/scheduled-update.js"), "utf8");
+      let invocation;
+      let exitCode;
+      runInNewContext(wrapper, { WScript: {
+        CreateObject(name) {
+          assert.equal(name, "WScript.Shell");
+          return { Run(...args) { invocation = args; return 7; } };
+        },
+        Quit(code) { exitCode = code; },
+      } });
+      assert.deepEqual(invocation, [`"${process.execPath}" "${path.join(base, "seo-kit.mjs")}" sync --scheduled`, 0, true]);
+      assert.equal(exitCode, 7);
       if (process.platform === "win32") {
         const source = `$parseTokens = $null; $parseErrors = $null; [System.Management.Automation.Language.Parser]::ParseFile('${file.replaceAll("'", "''")}', [ref]$parseTokens, [ref]$parseErrors) | Out-Null; if ($parseErrors.Count) { throw ($parseErrors | Out-String) }`;
         execute("powershell.exe", ["-NoProfile", "-NonInteractive", "-EncodedCommand", Buffer.from(source, "utf16le").toString("base64")]);
@@ -396,15 +413,60 @@ test("scheduler adapters cover Windows, macOS, Linux and cron without altering h
     }
     if (platform === "darwin") {
       const file = path.join(base, "Library/LaunchAgents/com.seo-kit.sync.plist");
-      assert.ok(readFileSync(file, "utf8").includes("<integer>3600</integer>"));
+      const plist = readFileSync(file, "utf8");
+      assert.ok(plist.includes("<key>RunAtLoad</key><true/>"));
+      assert.ok(plist.includes("<key>StartCalendarInterval</key><dict><key>Hour</key><integer>0</integer><key>Minute</key><integer>0</integer>"));
+      assert.ok(!plist.includes("StartInterval"));
+      assert.ok(plist.includes("<key>StandardInPath</key><string>/dev/null</string>"));
+      assert.ok(plist.includes("<string>--scheduled</string>"));
+      assert.ok(plist.includes("<key>StandardOutPath</key>"));
+      assert.ok(plist.includes("<key>StandardErrorPath</key>"));
       if (process.platform === "darwin") execute("plutil", ["-lint", "--", file]);
     }
-    if (platform === "linux") assert.ok(readFileSync(path.join(paths.config, "systemd/user/seo-kit-sync.timer"), "utf8").includes("OnUnitActiveSec=1h"));
-    if (platform === "freebsd") assert.ok(calls.at(-1).options.input.startsWith("# user task\n5 * * * * echo hello\n"));
-    configureUpdates({ base, paths, home: base, platform, env: {}, execute: executeMock, remove: true });
+    if (platform === "linux") {
+      const timer = readFileSync(path.join(paths.config, "systemd/user/seo-kit-sync.timer"), "utf8");
+      assert.ok(timer.includes("OnStartupSec=2min"));
+      assert.ok(timer.includes("OnCalendar=*-*-* 00:00:00"));
+      assert.ok(!timer.includes("OnUnitActiveSec"));
+      const service = readFileSync(path.join(paths.config, "systemd/user/seo-kit-sync.service"), "utf8");
+      assert.ok(service.includes("StandardInput=null"));
+      assert.ok(service.includes("StandardOutput=journal"));
+      assert.ok(service.includes("StandardError=journal"));
+      assert.match(service, /ExecStart=.* sync --scheduled/);
+    }
+    if (scheduler === "cron") {
+      const crontab = calls.at(-1).options.input;
+      assert.ok(crontab.startsWith("# user task\n5 * * * * echo hello\n"));
+      assert.match(crontab, /\n0 0 \* \* \* /);
+      assert.match(crontab, /\n@reboot /);
+      assert.ok(!crontab.includes("\n0 * * * * "));
+      assert.ok(crontab.includes("sync --scheduled < /dev/null >> "));
+      assert.ok(crontab.includes("2>&1"));
+    }
+    configureUpdates({ base, paths, home: base, ...selection, env: {}, execute: executeMock, remove: true });
+    if (platform === "win32") assert.equal(existsSync(path.join(base, "state/scheduled-update.js")), false);
   }
   const script = windowsRegistration("C:\\Users\\O'Neil\\SEO Kit", "C:\\Program Files\\nodejs\\node.exe");
   assert.ok(script.includes("O''Neil"));
+});
+
+test("scheduled launcher records output and exit status without interactive credential prompts", (t) => {
+  const { options, ctx } = fixture(t);
+  const state = installGlobal(options);
+  const script = `
+process.stdout.write(JSON.stringify({ args: process.argv.slice(2), prompt: process.env.GIT_TERMINAL_PROMPT, credentials: process.env.GCM_INTERACTIVE, github: process.env.GH_PROMPT_DISABLED }));
+process.stderr.write('Scheduled failure fixture');
+process.exitCode = 9;
+`;
+  writeFileSync(path.join(state.root, ".agents/scripts/setup.mjs"), script);
+  const result = execute(process.execPath, [path.join(ctx.base, "seo-kit.mjs"), "sync", "--scheduled"], { allowFailure: true });
+  assert.equal(result.status, 9);
+  assert.equal(result.stdout, "");
+  assert.equal(result.stderr, "");
+  assert.deepEqual(JSON.parse(readFileSync(path.join(ctx.base, "state/scheduler.log"), "utf8")), {
+    args: ["sync"], prompt: "0", credentials: "never", github: "1",
+  });
+  assert.equal(readFileSync(path.join(ctx.base, "state/scheduler.error.log"), "utf8"), "Scheduled failure fixture");
 });
 
 test("missing scheduler fails explicitly and foreign services are preserved", (t) => {

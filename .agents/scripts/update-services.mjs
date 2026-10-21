@@ -25,8 +25,7 @@ function managedFile(file, content, remove) {
 }
 
 export function windowsRegistration(base, node) {
-  const launcher = path.join(base, "seo-kit.mjs");
-  return template("windows/register.ps1.in", { "{{NODE}}": ps(node), "{{ARGUMENTS}}": ps(`"${launcher}" sync`), "{{BASE}}": ps(base) });
+  return template("windows/register.ps1.in", { "{{ARGUMENTS}}": ps(`//B //NoLogo //E:JScript "${path.join(base, "state", "scheduled-update.js")}"`), "{{BASE}}": ps(base) });
 }
 
 export function configureUpdates({ base, paths, platform = process.platform, home, node = process.execPath, env = process.env, execute = run, remove = false, scheduler = null }) {
@@ -34,6 +33,11 @@ export function configureUpdates({ base, paths, platform = process.platform, hom
   for (const value of [base, node, env.PATH ?? ""]) if (/[\r\n\0]/.test(value)) throw new Error("Scheduler paths cannot contain control characters");
   const invoke = (command, args, options = {}) => execute(command, args, { cwd: base, ...options });
   if (platform === "win32") {
+    const wrapper = path.join(base, "state", "scheduled-update.js");
+    // ASCII escapes keep paths readable by the legacy Windows script engine.
+    const command = JSON.stringify(`"${node}" "${launcher}" sync --scheduled`).replace(/[^\x00-\x7F]/g, (character) => `\\u${character.charCodeAt(0).toString(16).padStart(4, "0")}`);
+    const content = template("windows/update.js.in", { "{{COMMAND}}": command });
+    managedFile(wrapper, content, false);
     const script = remove ? `# ${MARK}
 $ErrorActionPreference = 'Stop'
 $name = 'SEO Kit Update-' + [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
@@ -45,6 +49,7 @@ if ($task -and $task.Description -eq '${MARK}') { Unregister-ScheduledTask -Task
     // Windows PowerShell 5.1 needs a BOM for non-ASCII user names and paths.
     writeAtomic(file, `\uFEFF${script}`);
     invoke("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", file]);
+    if (remove) managedFile(wrapper, content, true);
     return "windows-task";
   }
   if (platform === "darwin") {
@@ -84,8 +89,8 @@ if ($task -and $task.Description -eq '${MARK}') { Unregister-ScheduledTask -Task
     const pattern = /# BEGIN seo-kit automatic updates\n[\s\S]*?# END seo-kit automatic updates\n?/;
     if ((current.includes(CRON_START) || current.includes(CRON_END)) && !pattern.test(current)) throw new Error("Malformed seo-kit crontab markers");
     const cleaned = current.replace(pattern, "");
-    const command = `PATH=${sh(env.PATH ?? "/usr/bin:/bin")} ${sh(node)} ${sh(launcher)} sync >> ${sh(path.join(base, "state/scheduler.log"))} 2>&1`.replaceAll("%", "\\%");
-    const block = `${CRON_START}\n0 * * * * ${command}\n@reboot ${command}\n${CRON_END}\n`;
+    const command = `PATH=${sh(env.PATH ?? "/usr/bin:/bin")} ${sh(node)} ${sh(launcher)} sync --scheduled < /dev/null >> ${sh(path.join(base, "state/scheduler.log"))} 2>&1`.replaceAll("%", "\\%");
+    const block = `${CRON_START}\n0 0 * * * ${command}\n@reboot ${command}\n${CRON_END}\n`;
     invoke("crontab", ["-"], { input: remove ? cleaned : `${cleaned}${cleaned && !cleaned.endsWith("\n") ? "\n" : ""}${block}` });
     return "cron";
   }

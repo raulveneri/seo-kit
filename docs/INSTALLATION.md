@@ -1,6 +1,6 @@
 # Global installation and automatic updates
 
-`last_reviewed: 2026-10-20`
+`last_reviewed: 2026-10-21`
 
 SEO Kit is installed once per OS user, independently of any website/client project or model provider. Claude Code, Codex and OpenCode receive native discovery resources from that installation. No plugin marketplace, administrator account or Windows symlink privilege is needed by the installer. Managed enterprise policies can still restrict installation or scheduling.
 
@@ -49,14 +49,16 @@ Setup copies individual resources and records their hashes. It does not replace 
 
 ## Automatic updates and recovery
 
+All supported scheduler adapters run automatic updates without opening terminal windows. Linux uses a systemd background service or cron. macOS uses a launchd background job. Windows uses a windowless script host. Scheduled runs have no interactive standard input and write diagnostics to managed logs. Systemd also captures launcher errors in the user journal.
+
 | OS / environment | Per-user scheduling |
 | --- | --- |
-| Windows | Task Scheduler task `SEO Kit Update-<user SID>`, at user logon and hourly |
-| macOS | `com.seo-kit.sync` launch agent, at load and hourly |
-| Linux with a running systemd user manager | `seo-kit-sync.timer`, shortly after user-manager startup and hourly |
-| Linux without a usable user manager, FreeBSD, OpenBSD, NetBSD, Solaris, AIX | User crontab, hourly and at reboot, when cron supports it |
+| Windows | Task Scheduler task `SEO Kit Update-<user SID>`, at user logon and daily at local midnight, using a windowless script host |
+| macOS | `com.seo-kit.sync` launch agent, at load and daily at local midnight |
+| Linux with a running systemd user manager | `seo-kit-sync.timer`, shortly after user-manager startup and daily at local midnight |
+| Linux without a usable user manager, FreeBSD, OpenBSD, NetBSD, Solaris, AIX | User crontab, daily at local midnight and at reboot, when cron supports it |
 
-Updates run while the computer and the applicable user session/scheduler are available. Windows tasks use an interactive user token and limited privileges. No passwords are stored. They are not a promise of updates while the device is powered off, asleep or logged out. Offline failures retry on later scheduled runs. A missing scheduler or policy denial makes setup fail explicitly after resource installation, with a diagnostic. Install/enable the OS scheduler and rerun setup. `--no-services` explicitly opts out. Unknown OS scheduler adapters fail instead of claiming automatic updates are enabled.
+Updates run in the background while the computer and the applicable user session/scheduler are available. Midnight means 00:00 in the scheduler's local time zone, not UTC. With cron, this is the cron daemon's time zone. Windows and macOS start the per-user job at login. A Linux user timer starts with the user manager, which needs an existing linger configuration to run before login on an unattended server. The installer does not enable linger or install a system-wide service. Windows tasks use an interactive user token and limited privileges. No passwords are stored. Windows uses Windows Script Host (`wscript.exe` with its JScript engine) to launch Node without a console. The updater hides child consoles and scheduled runs disable interactive Git credential prompts. Errors are recorded in `state/updates.log` and `state/scheduler.error.log`. If Windows Script Host is unavailable or blocked by policy, automatic execution needs host-level diagnosis. Setup fails explicitly when the host executable is missing. They are not a promise of updates while the device is powered off, asleep or logged out. Offline failures retry on later scheduled runs. A missing scheduler or policy denial makes setup fail explicitly after resource installation, with a diagnostic. Install/enable the OS scheduler and rerun setup. `--no-services` explicitly opts out. Unknown OS scheduler adapters fail instead of claiming automatic updates are enabled.
 
 The updater checks up to 100 GitHub releases through `gh api` and selects the latest published stable release authored by the numeric owner ID in `.agents/seo-kit.json`. It requires an immutable release, a `vMAJOR.MINOR.PATCH` tag and a full SHA in `target_commitish`. The fetched tag must resolve to that exact SHA. Drafts, prereleases, releases by other accounts and ordinary Git tags are not approvals. API/authentication errors and missing approvals fail closed, with no fallback to `main`. It requires forward history and an unchanged origin/managed checkout, and stages a separate candidate. It rebuilds adapters, runs the Node-based repository doctor and rejects generated/working-tree differences before activation. These installation checks do not replace the full contributor/CI test suite. Changes are updates from the trusted upstream repository, not automatic internet research or knowledge rewriting.
 
@@ -67,6 +69,8 @@ Publishing a stable immutable release from the configured owner's account is the
 Enable release immutability in repository settings before publishing. Prepare a draft from the owner's account, with a version tag and the reviewed full SHA. Review it, then publish the draft manually from that same account. Creating the draft or pushing a commit alone never approves an update. The installer does not create or publish releases or change repository visibility. Release retrieval requires the corresponding repository access.
 
 The approval checks are implemented in [release-policy.mjs](../.agents/scripts/release-policy.mjs) and exercised by [release-policy.test.mjs](../.agents/tests/release-policy.test.mjs). The record relies on control of the configured owner account. It does not independently verify human presence or release attestations.
+
+To apply the new schedule and windowless launcher to an existing installation, rerun setup from the reviewed release after it is published. This replaces the kit-owned scheduler using the same task name or managed markers and preserves unrelated jobs. Editing this checkout alone does not change a registered task. `npm run sync:watch`, when used manually, also checks once on start and then at local midnight.
 
 Older installed versions that track `main` need an explicit migration using this updated installer after the first approved release is available. Merely editing this checkout does not change an older managed launcher or its scheduler. Keep such installations' legacy update jobs disabled until migration. This installer does not edit managed source in place.
 
@@ -159,6 +163,8 @@ The explicit legacy removal recognizes only links pointing to that checkout's kn
 The installer paths and discovery resources are defined in [platform-paths.mjs](../.agents/scripts/platform-paths.mjs) and [integrations.mjs](../.agents/scripts/integrations.mjs). Scheduler generation lives in [update-services.mjs](../.agents/scripts/update-services.mjs). These describe this kit's implementation. Verify discovery and scheduling in the host you use.
 
 Changelog:
+
+- 2026-10-21: Replaced hourly update checks with login/startup and local-midnight scheduling. Added a windowless Windows launcher, hidden child processes, noninteractive scheduled credentials and scheduler logs. Added scheduling and daylight-saving regression coverage. Existing installations apply scheduler changes by rerunning setup from the reviewed published release.
 
 - 2026-10-20: Restricted new installation and update candidates to owner-authored, published stable immutable releases pinned to full commit SHAs. Added bounded GitHub API lookup through `gh`, approval metadata and tests for unapproved branch changes, moved tags and unavailable approval. Repository visibility and publication remain manual decisions.
 - 2026-10-20: Added the `uninstall` command, preview shortcut and installed natural-language removal guidance, reusing ownership-checked managed removal. Uninstallation also deletes the managed directory, installed versions and logs while preserving personal configuration and projects.

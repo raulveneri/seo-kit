@@ -16,7 +16,7 @@ npm run setup
 npm run doctor
 ```
 
-For an existing checkout, start at the dry run. Setup creates a separate managed global installation, registers individual resources and enables hourly updates. After successful setup, the temporary checkout can be removed. To opt out of automatic updates, use `npm run setup -- --no-services`. Existing configuration is preserved. Conflicts fail explicitly. See [paths, migration and recovery](INSTALLATION.md).
+For an existing checkout, start at the dry run. Setup creates a separate managed global installation, registers individual resources and enables background updates at login/startup and daily at local midnight. After successful setup, the temporary checkout can be removed. To opt out of automatic updates, use `npm run setup -- --no-services`. Existing configuration is preserved. Conflicts fail explicitly. See [paths, migration and recovery](INSTALLATION.md).
 
 Expect `doctor: PASS`. A failure names the missing or invalid resource. This verifies repository and installed resource files, not whether an assistant has loaded a skill or an external account is accessible.
 
