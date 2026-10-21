@@ -164,3 +164,21 @@ npm run validate
 Edit canonical skills in `.agents/skills/` and agents in `.agents/agents/`. Run the build to regenerate adapters. Scripts, tests, service templates and audit dependency manifests also live in `.agents/`. Keep website credentials, analytics exports and audit datasets in the consuming project.
 
 Contribution instructions and validation requirements are documented in [AGENTS.md](AGENTS.md).
+
+## License and attribution
+
+Copyright (c) 2026 Raúl Veneri (raulveneri).
+
+SEO Kit uses the [SEO Kit Free Use License 1.0](LICENSE). You may use it for
+free, including professional work for paying clients, modify your copy and
+share copies or forks free of charge. Preserve [NOTICE](NOTICE), the license
+and the original credits. Identify modifications and their authors.
+
+You may charge for services performed with SEO Kit. You may not sell the kit,
+sell derivative versions or charge for access to a hosted version of the kit.
+Copies supplied with a service must remain free under the same license. Ordinary
+client reports and website improvements are not subject to these distribution
+conditions unless they reproduce substantial parts of the kit.
+
+This is a source-available license with resale restrictions, not MIT or an
+unrestricted open-source license. Read [LICENSE](LICENSE) for the complete terms.

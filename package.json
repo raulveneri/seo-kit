@@ -1,6 +1,7 @@
 {
   "name": "seo-kit",
   "version": "1.0.0",
+  "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
   "scripts": {
@@ -37,6 +38,8 @@
     ".github/workflows/*.yml",
     "AGENTS.md",
     "README.md",
+    "LICENSE",
+    "NOTICE",
     "docs/*.md",
     ".agents/seo-kit.json",
     ".agents/requirements-audit.txt",
