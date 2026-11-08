@@ -33,53 +33,38 @@ The assistant host controls whether a skill or agent is available and selected. 
 
 ## From request to result
 
-![Illustration of a request, website inspection, evidence review and report](docs/images/audit-workflow.webp)
-
-This example shows the stages of an existing-site optimization. An audit-only request stops after the report, while a new site can start from its requirements and source files.
+This workflow shows the stages of an existing-site optimization. An audit-only request stops after the report, while a new site can start from its requirements and source files.
 
 ```mermaid
-flowchart TD
-    A[1. Request<br/>Choose the project and goal] --> B[2. Scope and evidence<br/>Inspect context and identify missing access]
-    B --> C{Is an audit useful?}
-    C -- Yes --> D[3. Audit<br/>Review a build or run a bounded public-site crawl]
-    C -- No --> E[4. Proposals<br/>Compare opportunities, effort and risks]
-    D --> E
-    E --> F{Several viable paths?}
-    F -- Yes --> G[You choose a path]
-    F -- No --> H[Explain the suitable path]
-    G --> I[5. Implement authorized changes]
-    H --> I
-    I --> J[6. Verify and follow up<br/>Run checks and compare compatible evidence]
-    J --> K[Report changes, gaps and next steps]
+flowchart LR
+    A[1. Request] --> B[2. Project context]
+    B --> C[3. Evidence and audit]
+    C --> D[4. Proposal and selection]
+    D --> E[5. Authorized changes]
+    E --> F[6. Verification and follow-up]
 ```
 
-### Example assistant session
+An audit is used when useful. If several viable strategies remain, you choose before dependent changes. Immediate checks verify implementation. Later measurements assess search outcomes.
 
-The following is an **illustrative conversation**, not a recording or a guarantee of agent activity. `example.org` is a fictional target for the example. Actual messages and findings depend on the host, website, permissions and evidence.
+### A real CLI audit, in three phases
 
-```text
-YOU
-Audit https://example.org/ for SEO. Review the project's context and
-tell me what to fix first. Do not change the website yet.
+These screenshots capture xterm running the kit's offline auditor against a local two-page demonstration site. `https://example.org` supplies the example URL mapping. The run makes no network requests and does not audit that public domain. The screenshots show actual commands and results, including the evidence left unmeasured.
 
-ASSISTANT  |  Scope
-I will check the declared project, the public URL and available data.
-I will identify missing access before choosing the audit checks.
+**1. Audit the compiled site.** The report finds a broken internal link and a duplicate title. `show-report.py` prints selected fields from the saved JSON report. The result is provisional because external measurements and qualitative reviews are missing.
 
-ASSISTANT  |  Audit
-I will use the relevant audit workflow and checklists. If the live
-crawler is available, I will run a bounded crawl within its limits.
+![Actual terminal output from the initial audit: a broken internal link, duplicate titles and unmeasured checks](docs/images/cli-01-audit.png)
 
-ASSISTANT  |  Review
-I will separate observed findings from checks that need additional
-data or manual review, then prioritize the actionable issues.
+**2. Fix the sample.** The demonstration's `fix-demo.py` updates the about page's title and link. This action changes only the temporary example files.
 
-ASSISTANT  |  Result
-I will report the scope, evidence, findings and gaps, with recommended
-next steps. The audit request alone does not authorize site changes.
-```
+![Actual terminal output showing the about page title and internal link being corrected](docs/images/cli-02-fix.png)
 
-For a live crawl, the assistant asks about the page limit and uses 100 if no choice is supplied. It stores audit data in the selected project, not the kit checkout. For the commands and prerequisites, see [crawl a public website](#crawl-a-public-website).
+**3. Audit again and compare.** The auditor uses the saved baseline to show the resolved findings. Coverage remains provisional. A higher checklist score does not establish a search ranking improvement.
+
+![Actual terminal output from the follow-up audit and comparison with the baseline](docs/images/cli-03-verify.png)
+
+The capture script defines `audit` as a shell function that invokes the kit's `audit.py`. It also creates the sample and the two demonstration helpers. Reproduce the captures with `python3 .agents/scripts/capture-readme-demo.py` from this checkout, with Python, xterm, Xvfb and ffmpeg available. This CLI demonstration does not launch assistant agents. In an assistant host, agent and skill selection depends on the task and host capabilities.
+
+For the regular commands and prerequisites, see [audit compiled HTML](#audit-compiled-html) or [crawl a public website](#crawl-a-public-website).
 
 ## What you can do
 

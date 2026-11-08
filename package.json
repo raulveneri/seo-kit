@@ -41,7 +41,7 @@
     "LICENSE",
     "NOTICE",
     "docs/*.md",
-    "docs/images/*.webp",
+    "docs/images/*.png",
     ".agents/seo-kit.json",
     ".agents/requirements-audit.txt",
     ".agents/requirements-audit.lock",
