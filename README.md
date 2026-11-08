@@ -37,34 +37,39 @@ This workflow shows the stages of an existing-site optimization. An audit-only r
 
 ```mermaid
 flowchart LR
-    A[1. Request] --> B[2. Project context]
-    B --> C[3. Evidence and audit]
-    C --> D[4. Proposal and selection]
-    D --> E[5. Authorized changes]
-    E --> F[6. Verification and follow-up]
+    A[1. Request<br/>Choose the project and goal] --> B[2. Scope and evidence<br/>Inspect context and identify missing access]
+    B --> C{Is an audit useful?}
+    C -- Yes --> D[3. Audit<br/>Review a build or run a bounded public-site crawl]
+    C -- No --> E[4. Proposals<br/>Compare opportunities, effort and risks]
+    D --> E
+    E --> F{Several viable paths?}
+    F -- Yes --> G[You choose a path]
+    F -- No --> H[Explain the suitable path]
+    G --> I[5. Implement authorized changes]
+    H --> I
+    I --> J[6. Verify and follow up<br/>Run checks and compare compatible evidence]
+    J --> K[Report changes, gaps and next steps]
 ```
 
 An audit is used when useful. If several viable strategies remain, you choose before dependent changes. Immediate checks verify implementation. Later measurements assess search outcomes.
 
-### A real CLI audit, in three phases
+### Ask Codex for an audit
 
-These screenshots capture xterm running the kit's offline auditor against a local two-page demonstration site. `https://example.org` supplies the example URL mapping. The run makes no network requests and does not audit that public domain. The screenshots show actual commands and results, including the evidence left unmeasured.
+These are cropped screenshots of a real Codex CLI session using SEO Kit on a fictional, two-page local website. The demonstration project declares its scope and requests technical and on-page specialist reviews. The terminal messages and findings come from that session.
 
-**1. Audit the compiled site.** The report finds a broken internal link and a duplicate title. `show-report.py` prints selected fields from the saved JSON report. The result is provisional because external measurements and qualitative reviews are missing.
+**1. Describe the task.** Ask naturally for an audit. Codex reads the selected project's context and explains its scope before inspecting the site.
 
-![Actual terminal output from the initial audit: a broken internal link, duplicate titles and unmeasured checks](docs/images/cli-01-audit.png)
+![Codex CLI showing the user requesting an SEO Kit audit and Codex explaining that it will inspect the compiled pages and save findings](docs/images/codex-01-request.png)
 
-**2. Fix the sample.** The demonstration's `fix-demo.py` updates the about page's title and link. This action changes only the temporary example files.
+**2. Follow the work.** Codex starts the technical and on-page reviews and sends a progress update explaining what each specialist checks. This demo has no connected analytics, Search Console, field-performance or backlink data. Codex identifies those gaps explicitly.
 
-![Actual terminal output showing the about page title and internal link being corrected](docs/images/cli-02-fix.png)
+![Codex CLI starting technical and on-page review agents and explaining their checks and the unavailable data connections](docs/images/codex-02-working.png)
 
-**3. Audit again and compare.** The auditor uses the saved baseline to show the resolved findings. Coverage remains provisional. A higher checklist score does not establish a search ranking improvement.
+**3. Review the result.** Codex returns the verified problems, recommended fixes, evidence gaps and report paths. The website stays unchanged because the request is for an audit.
 
-![Actual terminal output from the follow-up audit and comparison with the baseline](docs/images/cli-03-verify.png)
+![Codex CLI showing the final audit findings, recommended fixes, missing measurements and saved reports](docs/images/codex-03-result.png)
 
-The capture script defines `audit` as a shell function that invokes the kit's `audit.py`. It also creates the sample and the two demonstration helpers. Reproduce the captures with `python3 .agents/scripts/capture-readme-demo.py` from this checkout, with Python, xterm, Xvfb and ffmpeg available. This CLI demonstration does not launch assistant agents. In an assistant host, agent and skill selection depends on the task and host capabilities.
-
-For the regular commands and prerequisites, see [audit compiled HTML](#audit-compiled-html) or [crawl a public website](#crawl-a-public-website).
+The example uses compiled HTML with `https://example.org` as its URL mapping. It does not crawl that public domain. Agent selection and data access depend on your host, project context and authorized connections. For a live site, declare the actual URL and follow the [bounded crawl instructions](#crawl-a-public-website).
 
 ## What you can do
 
