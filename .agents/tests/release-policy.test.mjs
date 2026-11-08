@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { approvedRelease, selectApprovedRelease } from "../scripts/release-policy.mjs";
+import { fetchReleases } from "../scripts/fetch-releases.mjs";
 
 const owner = 1234;
 const stable = { id: 10, tag_name: "v1.0.0", target_commitish: "a".repeat(40), draft: false, prerelease: false, immutable: true, author: { id: owner }, published_at: "2026-10-20T10:00:00Z" };
@@ -31,9 +32,36 @@ test("release lookup is bounded to GitHub and fails closed on unavailable approv
   const ctx = { base: "/tmp", env: {}, execute: (command, args, options) => { invocation = { command, args, options }; return { stdout: JSON.stringify([stable]) }; } };
   const config = { repository: "example/kit", updateChannel: "owner-approved-releases", releaseApprover: { id: owner } };
   assert.equal(approvedRelease(ctx, config).id, 10);
-  assert.equal(invocation.command, "gh");
-  assert.ok(invocation.args.includes("repos/example/kit/releases?per_page=100"));
-  assert.equal(invocation.options.env.GH_HOST, "github.com");
+  assert.equal(invocation.command, process.execPath);
+  assert.ok(invocation.args[0].endsWith("fetch-releases.mjs"));
+  assert.equal(invocation.args[1], "example/kit");
+  assert.equal(invocation.options.timeout, 30_000);
   assert.throws(() => approvedRelease(ctx, { ...config, updateChannel: "main" }), /Refusing branch fallback/);
   assert.throws(() => approvedRelease({ ...ctx, execute() { throw new Error("offline"); } }, config), /offline/);
+});
+
+test("public release requests omit credentials and reject redirects", async () => {
+  let invocation;
+  const releases = await fetchReleases("example/kit", async (url, options) => {
+    invocation = { url, options };
+    return new Response(JSON.stringify([stable]));
+  });
+  assert.deepEqual(releases, [stable]);
+  assert.equal(invocation.url, "https://api.github.com/repos/example/kit/releases?per_page=100");
+  assert.deepEqual(invocation.options.headers, { Accept: "application/vnd.github+json", "User-Agent": "seo-kit-updater" });
+  assert.equal(invocation.options.credentials, "omit");
+  assert.equal(invocation.options.redirect, "error");
+  assert.ok(invocation.options.signal instanceof AbortSignal);
+  await assert.rejects(fetchReleases("example/kit?redirect=evil", () => { throw new Error("must not request"); }), /Invalid release repository/);
+});
+
+test("public release lookup fails closed on HTTP, network and malformed responses", async () => {
+  for (const status of [401, 403, 404, 429, 500]) {
+    await assert.rejects(fetchReleases("example/kit", async () => new Response("unavailable", { status })), new RegExp(`HTTP ${status}`));
+  }
+  for (const message of ["offline", "redirect blocked", "request timed out"]) {
+    await assert.rejects(fetchReleases("example/kit", async () => { throw new Error(message); }), new RegExp(message));
+  }
+  await assert.rejects(fetchReleases("example/kit", async () => new Response("invalid JSON")), SyntaxError);
+  await assert.rejects(fetchReleases("example/kit", async () => new Response("{}")), /Invalid release API response/);
 });

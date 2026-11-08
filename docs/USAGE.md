@@ -90,7 +90,7 @@ An audit can supply the baseline, but a new website can start from its requireme
 
 ## Installation and synchronization
 
-Global setup supports Windows, macOS and Linux, with a cron fallback for additional Unix systems. Git, GitHub CLI (`gh`) and Node.js 22 or newer are required for installation. The optional audit tools require their own Python runtime.
+Global setup supports Windows, macOS and Linux, with a cron fallback for additional Unix systems. Git and Node.js 22 or newer are required for installation. The optional audit tools require their own Python runtime.
 
 ```bash
 npm run setup:dry-run

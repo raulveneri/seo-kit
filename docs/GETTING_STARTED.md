@@ -4,7 +4,7 @@ Choose one website or client and one goal. Use a dedicated project folder to kee
 
 ## Install and check the kit
 
-Requirements: Git, GitHub CLI (`gh`), Node.js 22 or newer and a local Claude Code, Codex or OpenCode host on Windows, macOS or Linux. Installation requires a published owner-approved release. Authenticate `gh` with read access while the repository is private. Basic installation does not require Python. The audit CLI requires Python 3.10 or newer.
+Requirements: Git, Node.js 22 or newer and a local Claude Code, Codex or OpenCode host on Windows, macOS or Linux. Installation requires a published owner-approved release. The public repository requires no GitHub account, login or token for installation or automatic updates. Basic installation does not require Python. The audit CLI requires Python 3.10 or newer.
 
 Use a temporary kit checkout outside the website/client project:
 

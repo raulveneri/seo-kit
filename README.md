@@ -86,7 +86,7 @@ Generated files stay in the selected client or website project: keyword research
 
 ## Quick start
 
-Requirements: Git, GitHub CLI (`gh`), Node.js 22 or newer and a local assistant host such as Claude Code, Codex or OpenCode. Authenticate `gh` with the repository access required for installation. Global installation supports Windows, macOS and Linux. Additional Unix systems can use the cron adapter when available. A chat-only model without filesystem/terminal access cannot install local resources.
+Requirements: Git, Node.js 22 or newer and a local assistant host such as Claude Code, Codex or OpenCode. Installation and automatic updates use the public repository without a GitHub account, login or token. Global installation supports Windows, macOS and Linux. Additional Unix systems can use the cron adapter when available. A chat-only model without filesystem/terminal access cannot install local resources.
 
 Tell your assistant:
 

@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url";
+
 // Published stable GitHub releases are the approval record. Never fall back to main.
 export function selectApprovedRelease(releases, approverId) {
   if (!Array.isArray(releases) || !Number.isSafeInteger(approverId) || approverId <= 0) throw new Error("Invalid release policy or API response");
@@ -15,9 +17,9 @@ export function selectApprovedRelease(releases, approverId) {
 export function approvedRelease(ctx, config) {
   if (config.updateChannel !== "owner-approved-releases") throw new Error("Unsupported update channel. Refusing branch fallback");
   // One bounded page. If there is no approved candidate, fail closed.
-  const result = ctx.execute("gh", ["api", "--hostname", "github.com", `repos/${config.repository}/releases?per_page=100`, "--header", "Accept: application/vnd.github+json"], {
+  const result = ctx.execute(process.execPath, [fileURLToPath(new URL("./fetch-releases.mjs", import.meta.url)), config.repository], {
     cwd: ctx.base, timeout: 30_000,
-    env: { ...process.env, ...ctx.env, GH_HOST: "github.com", GH_PROMPT_DISABLED: "1", GH_PAGER: "cat" },
+    env: { ...process.env, ...ctx.env },
   });
   return selectApprovedRelease(JSON.parse(result.stdout), config.releaseApprover.id);
 }
