@@ -8,6 +8,79 @@ Start in your assistant's command-line, IDE or app integration. Connect the tool
 
 The checklists and audit scoring use this kit's own SEO and GEO criteria.
 
+## How the kit fits together
+
+SEO Kit is installed for your user. You then open a separate website or client folder in your assistant and describe the task. The assistant uses the available kit resources and the project's own context to decide what evidence and checks are relevant.
+
+```mermaid
+flowchart LR
+    User[You] --> Host[Assistant host<br/>Claude Code, Codex or OpenCode]
+    Host --> Context[Website or client project<br/>Context, source and deliverables]
+    Host --> Runtime[Installed SEO Kit<br/>Discovery and runtime guidance]
+    Runtime --> Agents[Specialist agents<br/>Optimization, audit, on-page, off-page, technical]
+    Runtime --> Skills[Skills and knowledge<br/>Workflows, checklists and criteria]
+    Agents --> Skills
+    Agents --> Tools[Audit tools<br/>Build audit, live crawl and comparison]
+    Skills --> Tools
+    Tools --> Context
+    Host -. Optional, with access .-> Data[Search data and integrations<br/>Google tools, MCP or exports]
+    Data -. Evidence .-> Host
+    Releases[Owner-approved releases] --> Installer[Installer and update scheduler]
+    Installer --> Runtime
+```
+
+The assistant host controls whether a skill or agent is available and selected. A task may use a checklist without launching a separate agent. Connections, rendering and external measurements depend on the host, setup and permissions.
+
+## From request to result
+
+![Illustration of a request, website inspection, evidence review and report](docs/images/audit-workflow.webp)
+
+This example shows the stages of an existing-site optimization. An audit-only request stops after the report, while a new site can start from its requirements and source files.
+
+```mermaid
+flowchart TD
+    A[1. Request<br/>Choose the project and goal] --> B[2. Scope and evidence<br/>Inspect context and identify missing access]
+    B --> C{Is an audit useful?}
+    C -- Yes --> D[3. Audit<br/>Review a build or run a bounded public-site crawl]
+    C -- No --> E[4. Proposals<br/>Compare opportunities, effort and risks]
+    D --> E
+    E --> F{Several viable paths?}
+    F -- Yes --> G[You choose a path]
+    F -- No --> H[Explain the suitable path]
+    G --> I[5. Implement authorized changes]
+    H --> I
+    I --> J[6. Verify and follow up<br/>Run checks and compare compatible evidence]
+    J --> K[Report changes, gaps and next steps]
+```
+
+### Example assistant session
+
+The following is an **illustrative conversation**, not a recording or a guarantee of agent activity. `example.org` is a fictional target for the example. Actual messages and findings depend on the host, website, permissions and evidence.
+
+```text
+YOU
+Audit https://example.org/ for SEO. Review the project's context and
+tell me what to fix first. Do not change the website yet.
+
+ASSISTANT  |  Scope
+I will check the declared project, the public URL and available data.
+I will identify missing access before choosing the audit checks.
+
+ASSISTANT  |  Audit
+I will use the relevant audit workflow and checklists. If the live
+crawler is available, I will run a bounded crawl within its limits.
+
+ASSISTANT  |  Review
+I will separate observed findings from checks that need additional
+data or manual review, then prioritize the actionable issues.
+
+ASSISTANT  |  Result
+I will report the scope, evidence, findings and gaps, with recommended
+next steps. The audit request alone does not authorize site changes.
+```
+
+For a live crawl, the assistant asks about the page limit and uses 100 if no choice is supplied. It stores audit data in the selected project, not the kit checkout. For the commands and prerequisites, see [crawl a public website](#crawl-a-public-website).
+
 ## What you can do
 
 - **Choose where to focus.** Research keywords with connected data sources, find opportunities and compare proposals by benefit, effort and risk. The [optimization workflow](.agents/skills/seo-optimization/SKILL.md) recommends suitable paths. When several make sense, you choose.
