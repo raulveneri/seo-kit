@@ -1,6 +1,6 @@
 ---
 domain: Crawling, indexing and page experience
-last_reviewed: 2026-10-21
+last_reviewed: 2026-11-08
 ---
 
 # Technical SEO reference
@@ -18,6 +18,10 @@ After changing duplicate content, allow for recrawling and processing. Google's 
 ## 2. URL consistency
 
 Use the consuming project's declared URL policy. Link directly to intended destinations. Keep canonicals, redirects and sitemap URLs consistent. Preserve useful old-to-new mappings during a migration, and test actual responses. A map file alone does not prove a redirect works.
+
+Google recommends hyphens over underscores when separating words in URLs. This is a readability recommendation, not a reason by itself to migrate existing URLs. Assess the benefits and migration costs before changing established addresses.
+
+For platforms with user-created pages, distinguish content intended for Search from pages intended for direct sharing. Google describes `noindex` as an option for the latter and recommends monitoring Search Console for unexpected indexed pages or queries. A crawler must be able to access a page to see its `noindex` directive. Use access controls for private content.
 
 ## 3. Core Web Vitals
 
@@ -100,7 +104,16 @@ Additional discovery references checked 2026-10-21:
 - [Pagination](https://developers.google.com/search/docs/specialty/ecommerce/pagination-and-incremental-page-loading), sequential discovery and canonical choices.
 - [Mobile-first indexing](https://developers.google.com/search/docs/crawling-indexing/mobile/mobile-sites-mobile-first-indexing), content and metadata parity.
 
+References checked 2026-11-08:
+
+- [URL structure](https://developers.google.com/search/docs/crawling-indexing/url-structure), word separators and crawlable URL guidance. Google announced the clarification on 2026-10-23.
+- [Prevent user-generated spam](https://developers.google.com/search/docs/monitor-debug/prevent-abuse), shared pages and monitoring, updated 2026-10-26.
+- [Control what you share on Search](https://developers.google.com/search/docs/crawling-indexing/control-what-you-share), page and text-level controls and the site-wide generative AI control.
+- [Documentation updates](https://developers.google.com/search/updates), dated announcements for the above changes.
+
 ## Changelog
+
+- 2026-11-08: Recorded Google's URL separator clarification and guidance for shared user-generated pages, with indexing and access-control limits.
 
 - 2026-10-21: Added conditional discovery/mobile checks and corrected universal robots, sitemap and self-canonical assumptions in scoring guidance.
 
